@@ -71,17 +71,17 @@ EXEC dbo.Purpose_of_Payments		@DATABASE = '''+@ALLDATABASE+'''
 SELECT dbo.Purpose_TempT.[Transaction Number],
 	   dbo.Purpose_TempT.[Purpose_of_Payments],
 	   dbo.Nesting_Receiver_Beneficiary_Bank.[Coal_Beneficiary_Bank_ID],					    --1
-	   dbo.Nesting_Receiver_Correspondent_Bank.[Receiving Bank ID],					        	--2
-	   dbo.Nesting_Sender_Correspondent_Bank.[Sending Bank ID],								    --3
-	   dbo.Nesting_Sender_Ordering_Bank.[Coal_Originator_Bank_ID],							    --4
-	   dbo.Nesting_Beneficiary.[Coal_Beneficiary_ID],										    --5
-	   dbo.Originator.[Coal_Originator_ID],														--6
-	   dbo.Nesting_Receiver_Beneficiary_Bank.[Beneficiary_Bank_Country],						--1
-	   dbo.Nesting_Receiver_Correspondent_Bank.[Receiver_Correspondent_Bank_Country],			--2
-	   dbo.Nesting_Sender_Correspondent_Bank.[Sender_Correspondent_Bank_Country],				--3
-	   dbo.Nesting_Sender_Ordering_Bank.[Originator_Bank_Country],								--4
-	   dbo.Nesting_Beneficiary.[Beneficiary_Country],											--5
-	   dbo.Originator.[Originator_Country],														--6
+	   dbo.Nesting_Receiver_Correspondent_Bank.[Receiving Bank ID],					            --2
+	   dbo.Nesting_Sender_Correspondent_Bank.[Sending Bank ID],						    --3
+	   dbo.Nesting_Sender_Ordering_Bank.[Coal_Originator_Bank_ID],						    --4
+	   dbo.Nesting_Beneficiary.[Coal_Beneficiary_ID],							    --5
+	   dbo.Originator.[Coal_Originator_ID],									    --6
+	   dbo.Nesting_Receiver_Beneficiary_Bank.[Beneficiary_Bank_Country],				            --1
+	   dbo.Nesting_Receiver_Correspondent_Bank.[Receiver_Correspondent_Bank_Country],			    --2
+	   dbo.Nesting_Sender_Correspondent_Bank.[Sender_Correspondent_Bank_Country],				    --3
+	   dbo.Nesting_Sender_Ordering_Bank.[Originator_Bank_Country],					            --4
+	   dbo.Nesting_Beneficiary.[Beneficiary_Country],						            --5
+	   dbo.Originator.[Originator_Country],									    --6
 	   dbo.Purpose_TempT.[QueryDate],
 	   [dbo].[eGifts_Concat_Table].[Sender''s Reference], 
 	   [dbo].[eGifts_Concat_Table].[Reference for Beneficiary],
