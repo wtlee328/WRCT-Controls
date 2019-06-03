@@ -1,7 +1,7 @@
 USE [WRCT]
 GO
 /****** Object:  StoredProcedure [dbo].[CREATE_MAIN_TABLES]    Script Date: 6/3/2019 9:31:19 AM ******/
-SET ANSI_NULLS ON
+SET ANSI_NULLS 
 GO
 SET QUOTED_IDENTIFIER ON
 GO
