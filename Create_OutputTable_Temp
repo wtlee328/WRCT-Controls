@@ -1,0 +1,99 @@
+USE [WRCT]
+GO
+/****** Object:  StoredProcedure [dbo].[Create_OutputTable_Temp]    Script Date: 5/30/2019 2:55:58 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[Create_OutputTable_Temp]
+
+
+AS
+BEGIN
+Declare @Script VARCHAR(MAX)
+SET @Script =
+
+'
+IF OBJECT_ID(''dbo.OutputTable_Temp'', ''U'') IS NOT NULL 
+   DROP TABLE OutputTable_Temp;
+
+SELECT [Transaction Number],[Sender''s Reference],[Beneficiary_Country],[Nesting Sender], [Nesting Receiver], [MT202 LC], [MT202 Syndication Loans], [Travel Rule],
+		CONVERT(VARCHAR(10), getdate(), 111) AS QUERYDATE INTO OutputTable_Temp
+FROM (
+	SELECT * , 
+	
+	CASE WHEN LEFT([Reference for Beneficiary],3) IN (''NYA'',''CGO'',''LAC'',''SVB'',''TKY'',''OSA'',''PAR'',''AMS'',''HCM'',''SGP'',''SYD'',''MEL'',''BRI'',''HKG'',''LDN'',''PNM'',''MNL'',
+	                                             ''CHO'',''CVR'',''BKK'',''CHB'',''BNA'',''BPO'',''RYO'',''PNH'',''PPA'',''OLY'',''TKK'',''SUZ'',''KUS'',''WUJ'',''NBO'',''LAB'') 
+		THEN CASE 
+		    WHEN [Sender''s Reference]	LIKE ''___DA%'' THEN ''D/A (Import)''
+		    WHEN [Sender''s Reference]	LIKE ''___DP%'' THEN ''D/P (Import)''
+		    WHEN [Sender''s Reference]	LIKE ''___LC%'' THEN ''L/C Issuance & Payment''
+		    WHEN [Reference for Beneficiary] LIKE ''___NB%'' THEN ''L/C Negotiation''
+		    WHEN [Reference for Beneficiary] LIKE ''___FF%'' THEN ''Usance L/C Forfaiting'' 
+		END
+	END AS [MT202 LC],
+
+	CASE WHEN LEFT([Reference for Beneficiary],3) IN (''NYA'',''CGO'',''LAC'',''SVB'',''TKY'',''OSA'',''PAR'',''AMS'',''HCM'',''SGP'',''SYD'',''MEL'',''BRI'',''HKG'',''LDN'',''PNM'',''MNL'',
+	                                             ''CHO'',''CVR'',''BKK'',''CHB'',''BNA'',''BPO'',''RYO'',''PNH'',''PPA'',''OLY'',''TKK'',''SUZ'',''KUS'',''WUJ'',''NBO'',''LAB'') 
+		THEN CASE
+		    WHEN [Sender''s Reference]	LIKE ''___FE%'' THEN ''Foreign Exchange (FX/SPOT/FWD/SWAP)''
+		END
+	END AS [MT202 Syndication Loans],
+	
+	CASE WHEN [Originator_Bank_Country] = [Sender_Correspondent_Bank_Country]
+		Then ''TRUE''
+		ELSE ''FALSE''
+	END AS [Nesting Sender],
+
+	CASE WHEN [Beneficiary_Bank_Country] = [Receiver_Correspondent_Bank_Country]
+		THEN ''TRUE''
+		ELSE ''FALSE''
+	END AS [Nesting Receiver],
+
+	CASE WHEN [Beneficiary_Country] is NULL
+		AND [Originator Name] is NULL
+		OR [Instructing Bank Name] is Null
+		OR [Originator Bank Name] is Null
+		THEN ''True''
+	End as [Travel Rule],
+	
+	--Wire Transaction Fees
+	CASE WHEN [amount] = 30 THEN ''Wire Transaction Fee''
+	--Pure B2B Certifications
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%PURE%'' THEN ''Bank to Bank Certification''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%PURE BANK%'' THEN ''Bank to Bank Certification'' 
+	WHEN [Bank to Bank Info  Line-2] LIKE ''%PURE%'' THEN ''Bank to Bank Certification'' 	
+	WHEN [Bank to Bank Info  Line-3] LIKE ''%PURE%'' THEN ''Bank to Bank Certification''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%/PURE%'' OR [Bank to Bank Info  Line-2] LIKE ''%/PURE%'' OR [Bank to Bank Info  Line-3] LIKE ''%/PURE%'' THEN ''Bank to Bank Certification''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%PURE/%'' OR [Bank to Bank Info  Line-2] LIKE ''%PURE/%'' OR [Bank to Bank Info  Line-3] LIKE ''%PURE/%'' THEN ''Bank to Bank Certification''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%BANK TO BANK%'' OR [Bank to Bank Info  Line-2] LIKE ''%BANK TO BANK%'' OR [Bank to Bank Info  Line-3] LIKE ''%BANK TO BANK%'' THEN ''Bank to Bank Certification''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%PURE BANK TO BANK%'' OR [Bank to Bank Info  Line-2] LIKE ''%PURE BANK TO BANK%'' OR [Bank to Bank Info  Line-3] LIKE ''%PURE BANK TO BANK%'' THEN ''Bank to Bank Certification''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%BK TO BK%'' OR [Bank to Bank Info  Line-2] LIKE ''%BK TO BK%'' OR [Bank to Bank Info  Line-3] LIKE ''%BK TO BK%'' THEN ''Bank to Bank Certification''
+	--MT202 Trusts
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%ICBCTWTP024%'' OR [Bank to Bank Info  Line-2] LIKE ''%ICBCTWTP024%'' OR [Bank to Bank Info  Line-3] LIKE ''%ICBCTWTP024%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%OMGIS RED%'' OR [Bank to Bank Info  Line-2] LIKE ''%OMGIS RED%'' OR [Bank to Bank Info  Line-3] LIKE ''%OMGIS RED%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%MERCURIES LIFE%'' OR [Bank to Bank Info  Line-2] LIKE ''%MERCURIES LIFE%'' OR [Bank to Bank Info  Line-3] LIKE ''%MERCURIES LIFE%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%DIVIDEND%'' OR [Bank to Bank Info  Line-2] LIKE ''%DIVIDEND%'' OR [Bank to Bank Info  Line-3] LIKE ''%DIVIDEND%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%REDEMPTION%'' OR [Bank to Bank Info  Line-2] LIKE ''%REDEMPTION%'' OR [Bank to Bank Info  Line-3] LIKE ''%REDEMPTION%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%TRUST%'' OR [Bank to Bank Info  Line-2] LIKE ''%TRUST%'' OR [Bank to Bank Info  Line-3] LIKE ''%TRUST%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%BOND%'' OR [Bank to Bank Info  Line-2] LIKE ''%BOND%'' OR [Bank to Bank Info  Line-3] LIKE ''%BOND%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%[^R][^E]FUND%'' OR [Bank to Bank Info  Line-2] LIKE ''%[^R][^E]FUND%'' OR [Bank to Bank Info  Line-3] LIKE ''%[^R][^E]FUND[^I][^N][^G]%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%FUNDING%'' OR [Bank to Bank Info  Line-2] LIKE ''%FUND[^I][^N][^G]%'' OR [Bank to Bank Info  Line-3] LIKE ''%FUND[^I][^N][^G]%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%UT-SCHRODER%'' OR [Bank to Bank Info  Line-2] LIKE ''%UT-SCHRODER%'' OR [Bank to Bank Info  Line-3] LIKE ''%UT-SCHRODER%'' THEN ''Trust''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%REDEXT%'' OR [Bank to Bank Info  Line-2] LIKE ''%REDEXT%'' OR [Bank to Bank Info  Line-3] LIKE ''%REDEXT%'' THEN ''Trust''
+	--Foreign Exchange
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%FX%'' OR [Bank to Bank Info  Line-2] LIKE ''%FX%'' OR [Bank to Bank Info  Line-3] LIKE ''%FX%'' THEN ''Foreign Exchange''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%FX OPTION%'' OR [Bank to Bank Info  Line-2] LIKE ''%FX OPTION%'' OR [Bank to Bank Info  Line-3] LIKE ''%FX OPTION%'' THEN ''Foreign Exchange''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%/FX OPTION%'' OR [Bank to Bank Info  Line-2] LIKE ''%/FX OPTION%'' OR [Bank to Bank Info  Line-3] LIKE ''%/FX OPTION%'' THEN ''Foreign Exchange''
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%FX OPTION/%'' OR [Bank to Bank Info  Line-2] LIKE ''%FX OPTION/%'' OR [Bank to Bank Info  Line-3] LIKE ''%FX OPTION/%'' THEN ''Foreign Exchange''
+	--Refund
+	WHEN [Bank to Bank Info  Line-1] LIKE ''%REFUND%'' OR [Bank to Bank Info  Line-2] LIKE ''%REFUND%'' OR [Bank to Bank Info  Line-3] LIKE ''%REFUND%'' THEN ''Refund''
+
+	ELSE ''N/A''
+	END AS [MT202 Trust]
+			
+	FROM [dbo].[MainTable_Temp]
+	)as Data
+'
+EXEC (@Script)
+END
