@@ -9,16 +9,16 @@ GO
 ALTER PROCEDURE [dbo].[CREATE_MAIN_TABLES]
 @ALLDATABASE VARCHAR(MAX)
 AS
-sdfsdfsd
+
 BEGIN
-sdfsdfsdf
+
 Declare @Script VARCHAR(MAX)
 SET @Script =
 
 '
 EXEC eGifts_Concat @DATABASE = '''+@ALLDATABASE+'''
 
-IF OBJECT_ID(''dbo.MainTable_Temp'', ''U'') IS NdfsdfsdfOT NULL 
+IF OBJECT_ID(''dbo.MainTable_Temp'', ''U'') IS NOT NULL 
    DROP TABLE dbo.MainTable_Temp;
 
 --1)Beneficiary_Bank_Country
