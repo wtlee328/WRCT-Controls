@@ -1,0 +1,395 @@
+USE [WRCT]
+GO
+/****** Object:  StoredProcedure [dbo].[eGifts_Concat]    Script Date: 6/3/2019 12:55:24 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[eGifts_Concat]
+
+@DATABASE VARCHAR(MAX)
+AS
+
+BEGIN
+DECLARE @Script VARCHAR(MAX)
+SET @Script =
+
+'
+IF OBJECT_ID(''dbo.eGifts_Concat_Table'', ''U'') IS NOT NULL 
+   DROP TABLE dbo.eGifts_Concat_Table;
+
+SELECT *,
+
+	Coalesce(NULLIF([Originator (APD) ID],''''),[Originator ID]) as [Coal_Originator_ID],
+	Coalesce(NULLIF([Originator (APD) Name],''''),[Originator Name]) as [Coal_Originator_Name],
+	Coalesce(NULLIF([Originator (APD) Address],''''),[Originator Address]) as [Coal_Originator_Address],
+
+	Coalesce(NULLIF([Originator Bank (APD) ID],''''),[Originator Bank ID]) as [Coal_Originator_Bank_ID],
+	Coalesce(NULLIF([Originator Bank (APD) Name],''''),[Originator Bank Name]) as [Coal_Originator_Bank_Name],
+	Coalesce(NULLIF([Originator Bank (APD) Address],''''),[Originator Bank Address]) as [Coal_Originator_Bank_Address],
+
+	Coalesce(NULLIF([Beneficiary (APD) ID],''''),[Beneficiary ID]) as [Coal_Beneficiary_ID],
+	Coalesce(NULLIF([Beneficiary (APD) Name],''''),[Beneficiary Name]) as [Coal_Beneficiary_Name],
+	Coalesce(NULLIF([Beneficiary (APD) Address],''''),[Beneficiary Address]) as [Coal_Beneficiary_Address],
+
+	Coalesce(NULLIF([Beneficiary''s Bank (APD) ID],''''),[Beneficiary''s Bank ID]) as [Coal_Beneficiary_Bank_ID],
+	Coalesce(NULLIF([Beneficiary''s Bank (APD) Name],''''),[Beneficiary''s Bank Name]) as [Coal_Beneficiary_Bank_Name],
+	Coalesce(NULLIF([Beneficiary''s Bank (APD) Address],''''),[Beneficiary''s Bank Address]) as [Coal_Beneficiary_Bank_Address],
+
+	Coalesce(NULLIF([Intermediary Bank (APD) ID],''''),[Intermediary Bank ID]) as [Coal_Intermediary_Bank_ID],
+	Coalesce(NULLIF([Intermediary Bank (APD) Name],''''),[Intermediary Bank Name]) as [Coal_Intermediary_Bank_Name],
+	Coalesce(NULLIF([Intermediary Bank (APD) Address],''''),[Intermediary Bank Address]) as [Coal_Intermediary_Bank_Address],
+
+	Concat([Originator to Beneficiary Info], [Originator to Beneficiary Info (APD)]) 
+	AS [Originator to Beneficiary Info_Combined],
+
+	Concat([Bank to Bank Info], [Bank to Bank Info (APD)]) 
+	AS [Bank to Bank Info_Combined]
+	
+	INTO  [dbo].[eGifts_Concat_Table]
+
+	FROM(
+
+	SELECT
+	
+		[Transaction Number],
+		[Method of Payment],
+		[Institution Code],
+		[Branch Code],
+		[Department Code],
+		[Book Credit Institution Code],
+		[Book Credit Branch Code],
+		[Payment Date; format  YYYY-MM-DD HH MM SS 0],
+		[Value Date; format  YYYY-MM-DD HH MM SS 0],
+		[External Sequence Number],
+		[Currency Code],
+		[Amount],
+		[Total Bill Charges],
+		[Total Deduct Charges],
+		[Beneficiary Type1],
+		[Fedwire Product Code],
+		[Fedwire Type],
+		[Fedwire Sub-type],
+		[ACH Class],
+		[ACH Code],
+		[Source Indicator],
+		[Reference for Beneficiary],
+		[Sender''s Reference],
+		[Sending Bank Type],
+		[Sending Bank ID],
+		[Sending Bank Name],
+		
+		CONCAT(
+		[Sending Bank Address 1],
+		[Sending Bank Address 2],
+		[Sending Bank Address 3]
+		) 
+		AS [Sending Bank Address],
+		
+		[Sending Bank Advice Address],
+		[Sending Bank Advice Method],
+		[Sending Bank SWIFT Advice Message Type],
+		[Receiving Bank Type],
+		[Receiving Bank ID],
+		[Receiving Bank Name],
+		
+		CONCAT(
+		[Receiving Bank Address 1],
+		[Receiving Bank Address 2],
+		[Receiving Bank Address 3]
+		)
+		AS [Receiving Bank Address],
+		
+		[Receiving Bank Advice Address],
+		[Receiving Bank Advice Method],
+		[Receiving Bank Advice SWIFT Advice Message Type],
+		[Originator Type],
+		[Originator ID],
+		[Originator Name],
+		
+		CONCAT(
+		[Originator Address 1],
+		[Originator Address 2],
+		[Originator Address 3]
+		)
+		AS [Originator Address],
+		
+		[Originator Advice Address],
+		[Originator Advice Method],
+		[Originator SWIFT Advice Message Type],
+		[Originator Bank Type],
+		[Originator Bank ID],
+		[Originator Bank Name],
+		
+		CONCAT(
+		[Originator Bank Address 1],
+		[Originator Bank Address 2],
+		[Originator Bank Address 3]
+		)
+		AS [Originator Bank Address],
+		
+		[Originator Bank Advice Address],
+		[Originator Bank Advice Method],
+		[Originator Bank SWIFT Advice Message Type],
+		[Instructing Bank Type],
+		[Instructing Bank ID],
+		[Instructing Bank Name],
+		
+		CONCAT(
+		[Instructing Bank Address 1],
+		[Instructing Bank Address 2],
+		[Instructing Bank Address 3]
+		) AS [Instructing Bank Address],
+		
+		[Instructing Bank Advice Address],
+		[Instructing Bank Advice Method],
+		[Instructing Bank SWIFT Advice Message Type],
+		[Beneficiary Type2],
+		[Beneficiary ID],
+		[Beneficiary Name],
+		
+		CONCAT(
+		[Beneficiary Address 1],
+		[Beneficiary Address 2],
+		[Beneficiary Address 3]
+		) 
+		AS [Beneficiary Address],
+		
+		[Beneficiary Advice Address],
+		[Beneficiary Advice Method],
+		[Beneficiary SWIFT Advice Message Type],
+		[Beneficiary''s Bank Type],
+		[Beneficiary''s Bank ID],
+		[Beneficiary''s Bank Name],
+		
+		CONCAT(
+		[Beneficiary''s Bank Address 1],
+		[Beneficiary''s Bank Address 2],
+		[Beneficiary''s Bank Address 3]
+		) 
+		AS [Beneficiary''s Bank Address],
+		
+		[Beneficiary''s Bank Advice Address],
+		[Beneficiary''s Bank Advice Method],
+		[Beneficiary''s Bank SWIFT Advice Message Type],
+		[Intermediary Bank Type],
+		[Intermediary Bank ID],
+		[Intermediary Bank Name],
+		
+		CONCAT(
+		[Intermediary Bank Address 1],
+		[Intermediary Bank Address 2],
+		[Intermediary Bank Address 3]
+		) 
+		AS [Intermediary Bank Address],
+		
+		[Intermediary Bank Advice Address],
+		[Intermediary Bank Advice Method],
+		[Intermediary Bank SWIFT Advice Message Type],
+		
+		CONCAT(
+		[Originator to Beneficiary Info  Line-1],
+		[Originator to Beneficiary Info  Line-2],
+		[Originator to Beneficiary Info  Line-3],
+		[Originator to Beneficiary Info  Line-4]
+		) 
+		AS [Originator to Beneficiary Info],
+		
+		CONCAT(
+		[Bank to Bank Info  Line-1],
+		[Bank to Bank Info  Line-2],
+		[Bank to Bank Info  Line-3],
+		[Bank to Bank Info  Line-4],
+		[Bank to Bank Info  Line-5],
+		[Bank to Bank Info  Line-6]
+		) 
+		AS [Bank to Bank Info],
+		
+		CONCAT(
+		[Advice Information Line-1],
+		[Advice Information Line-2],
+		[Advice Information Line-3],
+		[Advice Information Line-4],
+		[Advice Information Line-5],
+		[Advice Information Line-6]
+		) 
+		AS [Advice Information],
+		
+		[CHIPS ISN],
+		[CHIPS OSN],
+		[CHIPS PSN],
+		[CHIPS RSN],
+		[CHIPS SSN],
+		[IMAD Cycle Date],
+		[IMAD Calendar Date],
+		[IMAD Application ID],
+		[IMAD IMSN],
+		[IMAD Lterm ID],
+		[IMAD Time],
+		[OMAD Cycle Date],
+		[OMAD Calendar Date],
+		[OMAD Application ID],
+		[OMAD Lterm ID],
+		[OMAD OMSN],
+		[OMAD Time],
+		[Currency instructed amount of incoming MT103],
+		[Exchange rate of incoming MT103],
+		[Detail of charges of incoming MT103],
+		
+		CONCAT(
+		[Sender''s charges of incoming MT103  (1)],
+		[Sender''s charges of incoming MT103 (2)],
+		[Sender''s charges of incoming MT103 (3)],
+		[Sender''s charges of incoming MT103 (4)]
+		) 
+		AS [Sender''s charges of incoming MT103],
+		
+		[Receiver''s charges of incoming MT103],
+		[Transaction type code of incoming MT103],
+		[Entry Date; format  YYYY-MM-DD HH MM SS 0],
+		[Completion Date; format  YYYY-MM-DD HH MM SS 0],
+		[Cancel Date; format  YYYY-MM-DD HH MM SS 0],
+		[Terminate Date; format  YYYY-MM-DD HH MM SS 0],
+		[Rollover Date; format  YYYY-MM-DD HH MM SS 0],
+		[Printed Date; format  YYYY-MM-DD HH MM SS 0],
+		[OFAC Check Flag],
+		[EDI flag],
+		[Pre-Notification Flag],
+		[Template Name],
+		[Template Version Number],
+		[Memo],
+		[Beneficiary Country Code1],
+		[Beneficiary''s Bank Country Code1],
+		
+		CONCAT(
+		[Reason for Payment Line 1],
+		[Reason for Payment Line 2]
+		) 
+		AS [Reason for Payment],
+		
+		[Debit Account Type],
+		[Debit Account ID],
+		[Credit Account Type],
+		[Credit Account ID],
+		[Local Amount],
+		[Paid Amount],
+		[Override Charges],
+		[Remittance Currency],
+		[Remittance Amount],
+		[Remittance Applied Rate],
+		[Remittance Type],
+		[Intermediary Bank 2 Type],
+		[Intermediary Bank 2 ID],
+		[Intermediary Bank 2 Name],
+		
+		CONCAT(
+		[Intermediary Bank 2 Address 1],
+		[Intermediary Bank 2 Address 2],
+		[Intermediary Bank 2 Address 3]
+		) 
+		AS [Intermediary Bank 2 Address],
+		
+		[Intermediary Bank 2 Advice Address],
+		[Intermediary Bank 2 Advice Method],
+		[Intermediary Bank 2 SWIFT Advice Message Type],
+		[Beneficiary Country Code2],
+		[Beneficiary''s Bank Country Code2],
+		[Intermediary Bank Country Code],
+		[Intermediary Bank 2 Country Code],
+		[Originator Country Code],
+		[Originator Bank Country Code],
+		[Originator (APD) Type],
+		[Originator (APD) ID],
+		[Originator (APD) Name],
+		
+		CONCAT(
+		[Originator (APD) Address 1],
+		[Originator (APD) Address 2],
+		[Originator (APD) Address 3]
+		) 
+		AS [Originator (APD) Address],
+		
+		[Originator Bank (APD) Type],
+		[Originator Bank (APD) ID],
+		[Originator Bank (APD) Name],
+		
+		CONCAT(
+		[Originator Bank (APD) Address 1],
+		[Originator Bank (APD) Address 2],
+		[Originator Bank (APD) Address 3]
+		) 
+		AS [Originator Bank (APD) Address],
+		
+		[Beneficiary (APD) Type],
+		[Beneficiary (APD) ID],
+		[Beneficiary (APD) Name],
+		
+		CONCAT(
+		[Beneficiary (APD) Address 1],
+		[Beneficiary (APD) Address 2],
+		[Beneficiary (APD) Address 3]
+		) 
+		AS [Beneficiary (APD) Address],
+		
+		[Beneficiary''s Bank (APD) Type],
+		[Beneficiary''s Bank (APD) ID],
+		[Beneficiary''s Bank (APD) Name],
+		
+		CONCAT(
+		[Beneficiary''s Bank (APD) Address 1],
+		[Beneficiary''s Bank (APD) Address 2],
+		[Beneficiary''s Bank (APD) Address 3]
+		) 
+		AS [Beneficiary''s Bank (APD) Address],
+		
+		[Intermediary Bank (APD) Type],
+		[Intermediary Bank (APD) ID],
+		[Intermediary Bank (APD) Name],
+		
+		CONCAT(
+		[Intermediary Bank (APD) Address 1],
+		[Intermediary Bank (APD) Address 2],
+		[Intermediary Bank (APD) Address 3]
+		) 
+		AS [Intermediary Bank (APD) Address],
+		
+		CONCAT(
+		[Originator to Beneficiary Info  (APD) Line-1],
+		[Originator to Beneficiary Info  (APD) Line-2],
+		[Originator to Beneficiary Info  (APD) Line-3],
+		[Originator to Beneficiary Info (APD)  Line-4]
+		) 
+		AS [Originator to Beneficiary Info (APD)],
+		
+		CONCAT(
+		[Bank to Bank Info  (APD) Line-1],
+		[Bank to Bank Info  (APD) Line-2],
+		[Bank to Bank Info  (APD) Line-3],
+		[Bank to Bank Info  (APD) Line-4],
+		[Bank to Bank Info  (APD) Line-5],
+		[Bank to Bank Info  (APD) Line-6]
+		) 
+		AS [Bank to Bank Info (APD)],
+		
+		[Beneficiary (APD) Country Code],
+		[Beneficiary''s Bank (APD) Country Code],
+		[Intermediary Bank (APD) Country Code],
+		[Originator (APD) Country Code],
+		[Originator Bank (APD) Country Code],
+		[APD Instructed Amount],
+		[APD Flag; set to 1 if transaction contains APD data],
+		[Inclearing Check Flag],
+		[Instrument Code],
+		[Domestic Foreign Flag],
+		[Reg E  Disclosure Date; format  YYYY-MM-DD HH MM SS 0],
+		[Spread],
+		[Queue Name                                 ]
+
+		FROM '+@DATABASE+'
+
+		)X
+	
+'
+
+EXEC (@Script)
+END
